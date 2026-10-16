@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สื่อการสอน 3D: มุมในวงกลมและมุมที่จุดศูนย์กลาง ม.3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#6366f1;
+  --accent2:#a855f7;
+  --amber:#f59e0b;
+  --ok:#10b981;
+  --bad:#f43f5e;
+  --radius:22px;
+}
+body[data-theme="day"]{
+  --page1:#dbeafe;--page2:#e0e7ff;
+  --glass:rgba(255,255,255,.62);
+  --glass-strong:rgba(255,255,255,.82);
+  --border:rgba(255,255,255,.8);
+  --text:#0f172a;
+  --muted:#475569;
+  --chip:rgba(99,102,241,.1);
+  --shadow:0 20px 50px -20px rgba(30,41,99,.35);
+  --input:rgba(255,255,255,.9);
+  --track:rgba(100,116,139,.22);
+}
+body[data-theme="night"]{
+  --page1:#050816;--page2:#0b1230;
+  --glass:rgba(15,23,42,.58);
+  --glass-strong:rgba(15,23,42,.86);
+  --border:rgba(148,163,184,.22);
+  --text:#e2e8f0;
+  --muted:#94a3b8;
+  --chip:rgba(129,140,248,.16);
+  --shadow:0 20px 50px -20px rgba(0,0,0,.7);
+  --input:rgba(30,41,59,.9);
+  --track:rgba(148,163,184,.25);
+}
+body[data-theme="rain"]{
+  --page1:#4b5a6d;--page2:#64748b;
+  --glass:rgba(30,41,59,.55);
+  --glass-strong:rgba(30,41,59,.85);
+  --border:rgba(203,213,225,.22);
+  --text:#f1f5f9;
+  --muted:#cbd5e1;
+  --chip:rgba(148,163,184,.2);
+  --shadow:0 20px 50px -20px rgba(0,0,0,.6);
+  --input:rgba(51,65,85,.9);
+  --track:rgba(203,213,225,.28);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Sarabun','Noto Sans Thai',system-ui,sans-serif;
+  color:var(--text);
+  background:linear-gradient(135deg,var(--page1),var(--page2));
+  transition:background .8s ease,color .6s ease;
+  overflow:hidden;
+}
+button{font-family:inherit;cursor:pointer;border:none;color:inherit}
+input{font-family:inherit}
+.glass{
+  background:var(--glass);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  transition:background .6s ease,border-color .6s ease;
+}
+#app{height:100%;display:flex;flex-direction:column;gap:12px;padding:12px}
+.topbar{
+  border-radius:var(--radius);
+  padding:10px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{
+  width:42px;height:42px;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px;
+  box-shadow:0 8px 20px -6px rgba(99,102,241,.7);
+}
+.brand h1{font-size:18px;font-weight:700;line-height:1.2}
+.brand p{font-size:12px;color:var(--muted)}
+.theorem{
+  background:var(--chip);border-radius:14px;padding:7px 14px;font-size:13px;font-weight:600;text-align:center;
+}
+.theorem b{color:var(--amber)}
+.layout{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:12px}
+#stage{
+  position:relative;border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--border);box-shadow:var(--shadow);min-height:0;background:#0b1020;
+}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.overlay{position:absolute;z-index:5}
+.weather{top:14px;left:14px;display:flex;gap:4px;padding:5px;border-radius:16px}
+.weather button,.tools button{
+  background:transparent;padding:7px 12px;border-radius:12px;font-size:13px;font-weight:600;
+  transition:all .25s ease;color:var(--text);white-space:nowrap;
+}
+.weather button:hover,.tools button:hover{background:var(--chip)}
+.weather button.active,.tools button.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 6px 16px -6px rgba(99,102,241,.8);
+}
+.tools{top:14px;right:14px;display:flex;flex-wrap:wrap;gap:4px;padding:5px;border-radius:16px;justify-content:flex-end;max-width:min(60%,480px)}
+.hint{
+  left:14px;bottom:14px;padding:8px 14px;border-radius:14px;font-size:12px;color:var(--muted);
+  display:flex;gap:10px;align-items:center;max-width:calc(100% - 28px);
+}
+.hint b{color:var(--text)}
+.live{
+  right:14px;bottom:14px;padding:10px 14px;border-radius:16px;display:flex;gap:14px;align-items:center;
+}
+.live div{text-align:center}
+.live small{display:block;font-size:11px;color:var(--muted)}
+.live strong{font-size:22px;font-weight:800}
+.live .c{color:#818cf8}
+.live .i{color:#c084fc}
+.live .x{font-size:20px;color:var(--muted);font-weight:700}
+#hsLayer{position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+.hs{
+  position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;
+  pointer-events:auto;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-weight:800;font-size:15px;display:grid;place-items:center;
+  box-shadow:0 8px 20px -4px rgba(99,102,241,.8),0 0 0 3px rgba(255,255,255,.55);
+  transition:transform .2s ease,opacity .3s ease;will-change:transform;
+}
+.hs::after{
+  content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(165,180,252,.9);
+  animation:pulse 2s ease-out infinite;
+}
+.hs:hover{filter:brightness(1.12)}
+.hs.on{background:linear-gradient(135deg,var(--amber),#f97316)}
+@keyframes pulse{0%{transform:scale(.8);opacity:1}100%{transform:scale(1.7);opacity:0}}
+#card{
+  position:absolute;z-index:6;left:14px;top:74px;width:min(340px,calc(100% - 28px));
+  border-radius:20px;padding:16px 18px 16px;display:none;
+  background:var(--glass-strong);
+}
+#card.show{display:block;animation:cardIn .45s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.94)}to{opacity:1;transform:none}}
+#card .bar{position:absolute;left:0;top:18px;bottom:18px;width:5px;border-radius:0 6px 6px 0;background:var(--accent)}
+#card h4{font-size:16px;font-weight:700;margin-bottom:6px;padding-right:28px}
+#card p{font-size:13.5px;line-height:1.65;color:var(--muted)}
+#card p b{color:var(--text)}
+#card .formula{
+  margin-top:10px;background:var(--chip);border-radius:12px;padding:8px 12px;font-weight:700;font-size:14px;text-align:center;
+}
+#cardClose{
+  position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:var(--chip);font-size:15px;
+}
+#cardClose:hover{background:var(--track)}
+.panel{border-radius:var(--radius);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.tabs{display:flex;gap:4px;padding:8px;border-bottom:1px solid var(--border)}
+.tabs button{
+  flex:1;background:transparent;padding:10px 6px;border-radius:14px;font-weight:700;font-size:14px;
+  color:var(--muted);transition:all .25s ease;
+}
+.tabs button.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 8px 18px -8px rgba(99,102,241,.9);
+}
+.panes{flex:1;overflow-y:auto;padding:16px;scrollbar-width:thin}
+.pane{display:none}
+.pane.active{display:block;animation:fadeUp .45s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.block{background:var(--glass);border:1px solid var(--border);border-radius:18px;padding:14px 16px;margin-bottom:14px}
+.block h3{font-size:15px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.block p,.block li{font-size:13.5px;line-height:1.7;color:var(--muted)}
+.block ol{padding-left:20px}
+.block b{color:var(--text)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  background:var(--chip);padding:8px 13px;border-radius:999px;font-size:13px;font-weight:600;
+  transition:all .25s ease;display:flex;align-items:center;gap:7px;
+}
+.chip:hover{transform:translateY(-2px);background:var(--track)}
+.chip.on{background:linear-gradient(135deg,var(--amber),#f97316);color:#fff}
+.ctrl{border-radius:16px;padding:12px 14px;margin-bottom:12px;border:1px solid var(--border)}
+.ctrl.a{background:rgba(37,99,235,.1)}
+.ctrl.b{background:rgba(79,70,229,.1)}
+.ctrl.p{background:rgba(147,51,234,.1)}
+.ctrl.r{background:rgba(100,116,139,.1)}
+.ctrl .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:600;font-size:14px}
+.ctrl .row span.l{display:flex;align-items:center;gap:8px}
+.num{
+  width:70px;text-align:center;background:var(--input);color:var(--text);
+  border:1px solid var(--border);border-radius:10px;padding:5px 4px;font-weight:700;font-size:13px;outline:none;
+}
+.num:focus{box-shadow:0 0 0 3px rgba(99,102,241,.45)}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:999px;background:var(--track);outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;
+  border:5px solid var(--accent);cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.3);
+}
+input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;background:#fff;border:5px solid var(--accent);cursor:pointer;
+}
+.ctrl.a input[type=range]::-webkit-slider-thumb{border-color:#2563eb}
+.ctrl.b input[type=range]::-webkit-slider-thumb{border-color:#4f46e5}
+.ctrl.p input[type=range]::-webkit-slider-thumb{border-color:#9333ea}
+.ctrl.r input[type=range]::-webkit-slider-thumb{border-color:#64748b}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.metric{border-radius:16px;padding:12px;text-align:center;border:1px solid var(--border)}
+.metric small{font-size:12px;font-weight:600;color:var(--muted);display:block}
+.metric strong{font-size:28px;font-weight:800;display:block;margin:2px 0 8px}
+.metric.c strong{color:#818cf8}
+.metric.i strong{color:#c084fc}
+.metric.c{background:rgba(99,102,241,.12)}
+.metric.i{background:rgba(168,85,247,.12)}
+.bar-track{height:8px;border-radius:999px;background:var(--track);overflow:hidden}
+.bar-fill{height:100%;border-radius:999px;transition:width .25s ease}
+.metric.c .bar-fill{background:linear-gradient(90deg,#6366f1,#818cf8)}
+.metric.i .bar-fill{background:linear-gradient(90deg,#a855f7,#c084fc)}
+.relation{
+  border-radius:16px;padding:12px 14px;margin-bottom:12px;font-weight:700;font-size:14px;text-align:center;
+  background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.4);color:var(--ok);
+  display:flex;flex-direction:column;gap:4px;
+}
+.relation small{font-weight:500;color:var(--muted);font-size:12px}
+.note{
+  border-radius:14px;padding:10px 13px;font-size:12.5px;line-height:1.6;color:var(--muted);
+  background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);margin-bottom:12px
+}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  background:var(--chip);padding:9px 14px;border-radius:12px;font-size:13px;font-weight:600;transition:all .2s ease
+}
+.btn:hover{background:var(--track);transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.q{margin-bottom:14px}
+.q p.qt{font-size:14px;font-weight:600;line-height:1.6;color:var(--text);margin-bottom:8px}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{
+  text-align:left;background:var(--chip);padding:9px 12px;border-radius:12px;font-size:13px;font-weight:500;
+  border:2px solid transparent;transition:all .2s ease;color:var(--text)
+}
+.opt:hover:not(:disabled){transform:translateX(3px);border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.right{background:rgba(16,185,129,.2);border-color:var(--ok)}
+.opt.wrong{background:rgba(244,63,94,.18);border-color:var(--bad)}
+.fb{display:none;margin-top:8px;padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.6}
+.fb.show{display:block;animation:fadeUp .35s ease}
+.fb.ok{background:rgba(16,185,129,.15);color:var(--text);border:1px solid rgba(16,185,129,.4)}
+.fb.no{background:rgba(244,63,94,.13);color:var(--text);border:1px solid rgba(244,63,94,.4)}
+.score{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:999px;
+  padding:4px 14px;font-size:13px;font-weight:700
+}
+.quizhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.result{
+  display:none;text-align:center;padding:16px;border-radius:18px;margin-top:6px;font-weight:700;
+  background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(168,85,247,.2));border:1px solid var(--border)
+}
+.result.show{display:block;animation:cardIn .5s ease}
+.foot{text-align:center;font-size:11.5px;color:var(--muted);padding:6px 0 2px}
+@media (max-width:1100px){
+  body{overflow:auto}
+  #app{height:auto;min-height:100%}
+  .layout{grid-template-columns:1fr;grid-template-rows:auto auto}
+  #stage{height:64vh;min-height:420px}
+  .panel{max-height:none}
+  .panes{overflow:visible}
+  .tools{max-width:70%}
+}
+@media (max-width:640px){
+  .live strong{font-size:18px}
+  .hint{display:none}
+  #card{top:auto;bottom:70px}
+}
+</style>
+</head>
+<body data-theme="day">
+<div id="app">
+  <header class="topbar glass">
+    <div class="brand">
+      <div class="logo">∠</div>
+      <div>
+        <h1>มุมในวงกลม 3D Interactive</h1>
+        <p>คณิตศาสตร์ ม.3 · มุมที่จุดศูนย์กลางและมุมในส่วนของวงกลม</p>
+      </div>
+    </div>
+    <div class="theorem">ทฤษฎีบท: <b>มุมที่จุดศูนย์กลาง = 2 × มุมในส่วนของวงกลม</b> (รองรับส่วนโค้งเดียวกัน)</div>
+  </header>
+
+  <main class="layout">
+    <section id="stage">
+      <div id="hsLayer"></div>
+
+      <div class="overlay weather glass" id="weatherBox">
+        <button data-w="day" class="active">☀️ กลางวัน</button>
+        <button data-w="night">🌙 กลางคืน</button>
+        <button data-w="rain">🌧️ ฝนตก</button>
+      </div>
+
+      <div class="overlay tools glass">
+        <button id="btnReset">🎥 รีเซ็ตกล้อง</button>
+        <button id="btnTop">⬇️ มุมมองด้านบน</button>
+        <button id="btnSpin">🔄 หมุนอัตโนมัติ</button>
+        <button id="btnDemo">▶️ สาธิตจุด P</button>
+        <button id="btnHs" class="active">📍 จุดอธิบาย</button>
+      </div>
+
+      <div id="card" class="glass">
+        <div class="bar" id="cardBar"></div>
+        <button id="cardClose" aria-label="ปิด">✕</button>
+        <h4 id="cardTitle"></h4>
+        <p id="cardBody"></p>
+        <div class="formula" id="cardFormula"></div>
+      </div>
+
+      <div class="overlay hint glass">
+        <span>🖱️ <b>คลิกลาก</b> หมุน</span>
+        <span>✋ <b>คลิกขวาลาก</b> เลื่อน</span>
+        <span>🔍 <b>ลูกกลิ้ง</b> ซูม</span>
+        <span>🎯 <b>ลากจุด A B P</b> บนวงกลม</span>
+      </div>
+
+      <div class="overlay live glass">
+        <div><small>∠AOB (ศูนย์กลาง)</small><strong class="c" id="liveC">0°</strong></div>
+        <span class="x">=2×</span>
+        <div><small>∠APB (ในส่วนโค้ง)</small><strong class="i" id="liveI">0°</strong></div>
+      </div>
+    </section>
+
+    <aside class="panel glass">
+      <nav class="tabs">
+        <button data-tab="learn" class="active">📘 เรียนรู้</button>
+        <button data-tab="lab">🧪 ทดลอง</button>
+        <button data-tab="quiz">📝 ทดสอบ</button>
+      </nav>
+      <div class="panes">
+
+        <div class="pane active" id="pane-learn">
+          <div class="block">
+            <h3><span class="dot" style="background:#6366f1"></span>นิยามที่ต้องรู้</h3>
+            <p><b>มุมที่จุดศูนย์กลาง (∠AOB)</b> คือมุมที่มีจุดยอดอยู่ที่จุดศูนย์กลาง O และแขนของมุมผ่านจุด A, B บนวงกลม<br>
+            <b>มุมในส่วนของวงกลม (∠APB)</b> คือมุมที่มีจุดยอด P อยู่บนเส้นรอบวง และแขนของมุมผ่านจุด A, B ซึ่งเป็นปลายส่วนโค้งเดียวกัน</p>
+          </div>
+
+          <div class="block">
+            <h3><span class="dot" style="background:#f59e0b"></span>จุดอธิบายบนวัตถุ 3D</h3>
+            <p style="margin-bottom:10px">คลิกหมายเลขบนฉาก 3D หรือเลือกจากรายการนี้ เพื่อดูการ์ดอธิบายและให้กล้องโฟกัสไปยังจุดนั้น</p>
+            <div class="chips" id="chipList"></div>
+          </div>
+
+          <div class="block">
+            <h3><span class="dot" style="background:#a855f7"></span>แนวคิดการพิสูจน์</h3>
+            <ol>
+              <li>OA = OP = OB เป็นรัศมี ดังนั้น △OAP และ △OBP เป็นสามเหลี่ยมหน้าจั่ว</li>
+              <li>มุมที่ฐานของสามเหลี่ยมหน้าจั่วมีขนาดเท่ากัน</li>
+              <li>มุมภายนอกของสามเหลี่ยมเท่ากับผลบวกของมุมภายในที่ไม่ได้ชิดกัน</li>
+              <li>รวมกันจะได้ ∠AOB = 2 × ∠APB เสมอ</li>
+            </ol>
+          </div>
+
+          <div class="block">
+            <h3><span class="dot" style="background:#10b981"></span>ข้อสังเกตสำคัญ</h3>
+            <ol>
+              <li>จุด P เคลื่อนที่บนส่วนโค้งเดียวกัน ขนาด ∠APB <b>ไม่เปลี่ยน</b></li>
+              <li>ถ้า AB เป็นเส้นผ่านศูนย์กลาง ∠APB = <b>90°</b></li>
+              <li>ถ้า P อยู่บนส่วนโค้งเล็ก ∠APB จะมากกว่า 90° และมุมที่จุดศูนย์กลางที่รองรับส่วนโค้งตรงข้ามเป็นมุมกลับ (มากกว่า 180°)</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-lab">
+          <div class="metrics">
+            <div class="metric c">
+              <small>มุมที่จุดศูนย์กลาง ∠AOB</small>
+              <strong id="mC">0°</strong>
+              <div class="bar-track"><div class="bar-fill" id="barC" style="width:0"></div></div>
+            </div>
+            <div class="metric i">
+              <small>มุมในส่วนของวงกลม ∠APB</small>
+              <strong id="mI">0°</strong>
+              <div class="bar-track"><div class="bar-fill" id="barI" style="width:0"></div></div>
+            </div>
+          </div>
+
+          <div class="relation">
+            <span id="relMain">∠AOB = 2 × ∠APB</span>
+            <small id="relSub"></small>
+          </div>
+
+          <div class="note" id="noteBox" style="display:none"></div>
+
+          <div class="ctrl r">
+            <div class="row"><span class="l"><span class="dot" style="background:#64748b"></span>รัศมีวงกลม</span><span id="rVal">100 หน่วย</span></div>
+            <input type="range" id="rS" min="60" max="130" value="100">
+          </div>
+
+          <div class="ctrl a">
+            <div class="row"><span class="l"><span class="dot" style="background:#2563eb"></span>จุด A (ตำแหน่งรอบวง)</span>
+              <span><input class="num" type="number" id="aN" min="0" max="360" value="200"> °</span></div>
+            <input type="range" id="aS" min="0" max="360" value="200">
+          </div>
+
+          <div class="ctrl b">
+            <div class="row"><span class="l"><span class="dot" style="background:#4f46e5"></span>จุด B (ตำแหน่งรอบวง)</span>
+              <span><input class="num" type="number" id="bN" min="0" max="360" value="340"> °</span></div>
+            <input type="range" id="bS" min="0" max="360" value="340">
+          </div>
+
+          <div class="ctrl p">
+            <div class="row"><span class="l"><span class="dot" style="background:#9333ea"></span>จุด P (จุดยอดบนเส้นรอบวง)</span>
+              <span><input class="num" type="number" id="pN" min="0" max="360" value="80"> °</span></div>
+            <input type="range" id="pS" min="0" max="360" value="80">
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" id="btnRandom">🎲 สุ่มตำแหน่ง</button>
+            <button class="btn" id="btnDiameter">📏 ให้ AB เป็นเส้นผ่านศูนย์กลาง</button>
+            <button class="btn" id="btnDefault">↺ ค่าเริ่มต้น</button>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-quiz">
+          <div class="quizhead">
+            <h3 style="font-size:15px;font-weight:700">แบบทดสอบความเข้าใจ</h3>
+            <span class="score" id="scoreBadge">คะแนน 0 / 5</span>
+          </div>
+          <div id="quizBox"></div>
+          <div class="result" id="quizResult"></div>
+          <div class="actions" style="margin-top:12px">
+            <button class="btn" id="btnQuizReset">↺ ทำใหม่</button>
+          </div>
+        </div>
+
+      </div>
+      <div class="foot">สื่อการสอนเรขาคณิต ม.3 · ลากจุดบนวงกลม 3D เพื่อค้นพบทฤษฎีบทด้วยตัวเอง</div>
+    </aside>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+  var stage=document.getElementById('stage');
+  var $=function(id){return document.getElementById(id)};
+  var H=0.2;
+
+  var state={pct:100,a:200,b:340,p:80};
+  var G=null;
+  var currentCard=null;
+  var demo=false;
+  var demoT=0;
+  var dragKey=null;
+
+  var renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  stage.insertBefore(renderer.domElement,stage.firstChild);
+
+  var scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x8fd3ff);
+  scene.fog=new THREE.FogExp2(0xbfe6ff,0.012);
+
+  var camera=new THREE.PerspectiveCamera(45,1,0.1,700);
+  camera.position.set(9,8,11);
+
+  var controls=new THREE.OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;
+  controls.dampingFactor=0.08;
+  controls.minDistance=4;
+  controls.maxDistance=42;
+  controls.maxPolarAngle=Math.PI*0.495;
+  controls.target.set(0,0.4,0);
+  controls.autoRotateSpeed=1.4;
+  controls.update();
+
+  var hemi=new THREE.HemisphereLight(0xdbeeff,0x8a9a5b,0.65);
+  scene.add(hemi);
+
+  var dir=new THREE.DirectionalLight(0xfff1d6,1.6);
+  dir.position.set(-8,12,-10);
+  dir.castShadow=true;
+  dir.shadow.mapSize.set(2048,2048);
+  dir.shadow.camera.left=-10;
+  dir.shadow.camera.right=10;
+  dir.shadow.camera.top=10;
+  dir.shadow.camera.bottom=-10;
+  dir.shadow.camera.near=1;
+  dir.shadow.camera.far=60;
+  dir.shadow.bias=-0.0004;
+  dir.shadow.radius=3;
+  scene.add(dir);
+
+  var glow=new THREE.PointLight(0x8aa4ff,0,26,1.6);
+  glow.position.set(0,6,0);
+  scene.add(glow);
+
+  var groundMat=new THREE.MeshStandardMaterial({color:0x7cc47a,roughness:0.95,metalness:0});
+  var ground=new THREE.Mesh(new THREE.CircleGeometry(70,96),groundMat);
+  ground.rotation.x=-Math.PI/2;
+  ground.position.y=-0.2;
+  ground.receiveShadow=true;
+  scene.add(ground);
+
+  var platMat=new THREE.MeshStandardMaterial({color:0xf8fafc,roughness:0.6,metalness:0.05});
+  var platform=new THREE.Mesh(new THREE.CylinderGeometry(1,1,0.2,128),platMat);
+  platform.position.y=-0.1;
+  platform.receiveShadow=true;
+  platform.castShadow=true;
+  scene.add(platform);
+
+  var gridGroup=new THREE.Group();
+  (function(){
+    var pts=[];
+    var rings=[0.25,0.5,0.75];
+    var i,j,seg=96;
+    for(i=0;i<rings.length;i++){
+      for(j=0;j<seg;j++){
+        var a1=j/seg*Math.PI*2,a2=(j+1)/seg*Math.PI*2;
+        pts.push(rings[i]*Math.cos(a1),0,rings[i]*Math.sin(a1),rings[i]*Math.cos(a2),0,rings[i]*Math.sin(a2));
+      }
+    }
+    for(i=0;i<12;i++){
+      var an=i/12*Math.PI*2;
+      pts.push(0,0,0,Math.cos(an),0,Math.sin(an));
+    }
+    var g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+    var m=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x64748b,transparent:true,opacity:0.28}));
+    m.position.y=0.004;
+    gridGroup.add(m);
+  })();
+  scene.add(gridGroup);
+
+  var rimMat=new THREE.MeshStandardMaterial({color:0x6366f1,emissive:0x4338ca,emissiveIntensity:0.45,roughness:0.3,metalness:0.4});
+  var rim=new THREE.Mesh(new THREE.TorusGeometry(4,0.045,14,200),rimMat);
+  rim.rotation.x=Math.PI/2;
+  rim.position.y=0.01;
+  rim.castShadow=true;
+  scene.add(rim);
+
+  var tickGroup=new THREE.Group();
+  scene.add(tickGroup);
+
+  function buildTicks(R){
+    while(tickGroup.children.length){
+      var c=tickGroup.children.pop();
+      c.geometry.dispose();
+    }
+    var tg=new THREE.BoxGeometry(0.05,0.05,0.28);
+    for(var i=0;i<36;i++){
+      var an=i/36*Math.PI*2;
+      var big=i%3===0;
+      var m=new THREE.Mesh(big?new THREE.BoxGeometry(0.07,0.07,0.42):tg.clone(),new THREE.MeshStandardMaterial({color:big?0x6366f1:0x94a3b8,roughness:0.5}));
+      m.position.set((R+0.02)*Math.cos(an),0.02,-(R+0.02)*Math.sin(an));
+      m.rotation.y=an;
+      tickGroup.add(m);
+    }
+  }
+
+  var sectorMat=new THREE.MeshBasicMaterial({color:0x6366f1,transparent:true,opacity:0.3,side:THREE.DoubleSide,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+  var sector=new THREE.Mesh(new THREE.BufferGeometry(),sectorMat);
+  scene.add(sector);
+
+  var arcMat=new THREE.MeshStandardMaterial({color:0xf59e0b,emissive:0xf59e0b,emissiveIntensity:0.55,roughness:0.35,side:THREE.DoubleSide});
+  var arcStrip=new THREE.Mesh(new THREE.BufferGeometry(),arcMat);
+  arcStrip.castShadow=true;
+  scene.add(arcStrip);
+
+  var markCMat=new THREE.MeshBasicMaterial({color:0x818cf8,transparent:true,opacity:0.75,side:THREE.DoubleSide,depthWrite:false});
+  var markPMat=new THREE.MeshBasicMaterial({color:0xc084fc,transparent:true,opacity:0.8,side:THREE.DoubleSide,depthWrite:false});
+  var markC=new THREE.Mesh(new THREE.BufferGeometry(),markCMat);
+  var markP=new THREE.Mesh(new THREE.BufferGeometry(),markPMat);
+  scene.add(markC);
+  scene.add(markP);
+
+  function makeTube(color,emissive){
+    var m=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,1,16),new THREE.MeshStandardMaterial({color:color,emissive:emissive,emissiveIntensity:0.5,roughness:0.3,metalness:0.3}));
+    m.castShadow=true;
+    scene.add(m);
+    return m;
+  }
+  var tOA=makeTube(0x4f46e5,0x3730a3);
+  var tOB=makeTube(0x4f46e5,0x3730a3);
+  var tPA=makeTube(0x9333ea,0x6b21a8);
+  var tPB=makeTube(0x9333ea,0x6b21a8);
+  var tOP=makeTube(0x94a3b8,0x334155);
+  tOP.material.transparent=true;
+  tOP.material.opacity=0.45;
+
+  var yAxis=new THREE.Vector3(0,1,0);
+  function setTube(m,p1,p2){
+    var d=new THREE.Vector3().subVectors(p2,p1);
+    var len=d.length();
+    if(len<1e-5){m.visible=false;return}
+    m.visible=true;
+    m.position.copy(p1).addScaledVector(d,0.5);
+    m.scale.set(1,len,1);
+    m.quaternion.setFromUnitVectors(yAxis,d.normalize());
+  }
+
+  function makePoint(color){
+    var g=new THREE.Group();
+    var m=new THREE.Mesh(new THREE.SphereGeometry(0.2,36,28),new THREE.MeshStandardMaterial({color:color,roughness:0.2,metalness:0.35,emissive:color,emissiveIntensity:0.35}));
+    m.castShadow=true;
+    g.add(m);
+    var ring=new THREE.Mesh(new THREE.TorusGeometry(0.34,0.022,12,56),new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.85}));
+    ring.rotation.x=Math.PI/2;
+    g.add(ring);
+    var hit=new THREE.Mesh(new THREE.SphereGeometry(0.6,12,10),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
+    g.add(hit);
+    g.userData={hit:hit,ring:ring,mesh:m};
+    scene.add(g);
+    return g;
+  }
+  var ptA=makePoint(0x2563eb);
+  var ptB=makePoint(0x4f46e5);
+  var ptP=makePoint(0x9333ea);
+  var ptO=new THREE.Mesh(new THREE.SphereGeometry(0.17,32,24),new THREE.MeshStandardMaterial({color:0x1e293b,roughness:0.3,metalness:0.5,emissive:0x475569,emissiveIntensity:0.5}));
+  ptO.castShadow=true;
+  scene.add(ptO);
+  var pointMap={A:ptA,B:ptB,P:ptP};
+
+  function makeSprite(w,h,sx){
+    var c=document.createElement('canvas');
+    c.width=w;c.height=h;
+    var tex=new THREE.CanvasTexture(c);
+    tex.anisotropy=4;
+    var mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false,fog:false});
+    var s=new THREE.Sprite(mat);
+    s.scale.set(sx,sx*h/w,1);
+    s.renderOrder=20;
+    s.userData={c:c,tex:tex,text:null,color:null};
+    scene.add(s);
+    return s;
+  }
+  function drawLetter(s,text,color){
+    var u=s.userData;
+    if(u.text===text&&u.color===color)return;
+    u.text=text;u.color=color;
+    var c=u.c,x=c.getContext('2d');
+    x.clearRect(0,0,c.width,c.height);
+    x.beginPath();
+    x.arc(c.width/2,c.height/2,c.width/2-8,0,Math.PI*2);
+    x.fillStyle=color;
+    x.fill();
+    x.lineWidth=6;
+    x.strokeStyle='rgba(255,255,255,0.9)';
+    x.stroke();
+    x.fillStyle='#fff';
+    x.font='800 64px Sarabun, sans-serif';
+    x.textAlign='center';
+    x.textBaseline='middle';
+    x.fillText(text,c.width/2,c.height/2+4);
+    u.tex.needsUpdate=true;
+  }
+  function drawPill(s,text,color){
+    var u=s.userData;
+    if(u.text===text&&u.color===color)return;
+    u.text=text;u.color=color;
+    var c=u.c,x=c.getContext('2d'),w=c.width,h=c.height,r=h/2-6;
+    x.clearRect(0,0,w,h);
+    x.beginPath();
+    x.moveTo(r+6,6);
+    x.lineTo(w-r-6,6);
+    x.arc(w-r-6,h/2,r,-Math.PI/2,Math.PI/2);
+    x.lineTo(r+6,h-6);
+    x.arc(r+6,h/2,r,Math.PI/2,Math.PI*1.5);
+    x.closePath();
+    x.fillStyle='rgba(15,23,42,0.88)';
+    x.fill();
+    x.lineWidth=5;
+    x.strokeStyle=color;
+    x.stroke();
+    x.fillStyle='#fff';
+    x.font='800 54px Sarabun, sans-serif';
+    x.textAlign='center';
+    x.textBaseline='middle';
+    x.fillText(text,w/2,h/2+3);
+    u.tex.needsUpdate=true;
+  }
+
+  var lbA=makeSprite(128,128,0.95);
+  var lbB=makeSprite(128,128,0.95);
+  var lbP=makeSprite(128,128,0.95);
+  var lbO=makeSprite(128,128,0.85);
+  var lbC=makeSprite(380,112,2.4);
+  var lbI=makeSprite(380,112,2.4);
+
+  function refreshLabelsAfterFont(){
+    [lbA,lbB,lbP,lbO,lbC,lbI].forEach(function(s){s.userData.text=null});
+    updateAll();
+  }
+
+  var sunGroup=new THREE.Group();
+  var sunCore=new THREE.Mesh(new THREE.SphereGeometry(6,32,24),new THREE.MeshBasicMaterial({color:0xfff2b0,fog:false,transparent:true}));
+  var sunHalo=new THREE.Mesh(new THREE.SphereGeometry(11,32,24),new THREE.MeshBasicMaterial({color:0xffe28a,fog:false,transparent:true,opacity:0.25}));
+  sunGroup.add(sunCore);
+  sunGroup.add(sunHalo);
+  sunGroup.position.set(-95,22,-120);
+  scene.add(sunGroup);
+
+  var moonGroup=new THREE.Group();
+  var moonCore=new THREE.Mesh(new THREE.SphereGeometry(5,32,24),new THREE.MeshBasicMaterial({color:0xeef2ff,fog:false,transparent:true}));
+  var moonHalo=new THREE.Mesh(new THREE.SphereGeometry(9,32,24),new THREE.MeshBasicMaterial({color:0x9db4ff,fog:false,transparent:true,opacity:0.2}));
+  moonGroup.add(moonCore);
+  moonGroup.add(moonHalo);
+  moonGroup.position.set(-85,32,-125);
+  scene.add(moonGroup);
+
+  var starsGeo=new THREE.BufferGeometry();
+  (function(){
+    var n=1600,arr=new Float32Array(n*3);
+    for(var i=0;i<n;i++){
+      var u=Math.random()*Math.PI*2;
+      var v=Math.acos(Math.random()*0.95+0.05);
+      var r=320;
+      arr[i*3]=r*Math.sin(v)*Math.cos(u);
+      arr[i*3+1]=r*Math.cos(v);
+      arr[i*3+2]=r*Math.sin(v)*Math.sin(u);
+    }
+    starsGeo.setAttribute('position',new THREE.BufferAttribute(arr,3));
+  })();
+  var starsMat=new THREE.PointsMaterial({color:0xffffff,size:1.8,sizeAttenuation:false,transparent:true,opacity:0,fog:false,depthWrite:false});
+  var stars=new THREE.Points(starsGeo,starsMat);
+  scene.add(stars);
+
+  var clouds=[];
+  var cloudMat=new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.9});
+  (function(){
+    var sg=new THREE.SphereGeometry(1,18,14);
+    for(var i=0;i<9;i++){
+      var g=new THREE.Group();
+      var cnt=5+Math.floor(Math.random()*3);
+      for(var j=0;j<cnt;j++){
+        var m=new THREE.Mesh(sg,cloudMat);
+        var s=2+Math.random()*2.2;
+        m.scale.set(s*1.3,s*0.7,s);
+        m.position.set((j-cnt/2)*2.2+Math.random(),Math.random()*0.8,Math.random()*2-1);
+        g.add(m);
+      }
+      var ang=Math.random()*Math.PI*2;
+      var rad=24+Math.random()*34;
+      g.position.set(Math.cos(ang)*rad,15+Math.random()*7,Math.sin(ang)*rad);
+      g.userData.speed=0.6+Math.random()*0.9;
+      scene.add(g);
+      clouds.push(g);
+    }
+  })();
+
+  var RAIN=2600;
+  var rainPos=new Float32Array(RAIN*6);
+  var rainVel=new Float32Array(RAIN);
+  (function(){
+    for(var i=0;i<RAIN;i++){
+      var x=(Math.random()-0.5)*44,y=Math.random()*24,z=(Math.random()-0.5)*44;
+      rainPos[i*6]=x;rainPos[i*6+1]=y;rainPos[i*6+2]=z;
+      rainPos[i*6+3]=x+0.12;rainPos[i*6+4]=y+0.75;rainPos[i*6+5]=z;
+      rainVel[i]=26+Math.random()*14;
+    }
+  })();
+  var rainGeo=new THREE.BufferGeometry();
+  rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
+  var rainMat=new THREE.LineBasicMaterial({color:0xb4cdf0,transparent:true,opacity:0,fog:false});
+  var rain=new THREE.LineSegments(rainGeo,rainMat);
+  rain.frustumCulled=false;
+  scene.add(rain);
+
+  var colorKeys=['bg','fog','hemiSky','hemiGround','dirC','ground','platform','cloudC','rimC'];
+  function mk(o){
+    var r={};
+    colorKeys.forEach(function(k){r[k]=new THREE.Color(o[k])});
+    r.dirPos=new THREE.Vector3(o.dirPos[0],o.dirPos[1],o.dirPos[2]);
+    ['fogD','hemiI','dirI','pointI','stars','clouds','rain','sun','moon','exposure','rough','metal'].forEach(function(k){r[k]=o[k]});
+    return r;
+  }
+  var presets={
+    day:mk({bg:0x8fd3ff,fog:0xbfe6ff,fogD:0.011,hemiSky:0xdbeeff,hemiGround:0x8a9a5b,hemiI:0.7,dirC:0xfff1d6,dirI:1.7,dirPos:[-8,12,-10],pointI:0,ground:0x7cc47a,platform:0xf8fafc,rimC:0x6366f1,stars:0,clouds:1,cloudC:0xffffff,rain:0,sun:1,moon:0,exposure:1.0,rough:0.65,metal:0.05}),
+    night:mk({bg:0x050816,fog:0x0a1030,fogD:0.016,hemiSky:0x4a5aa0,hemiGround:0x0b1020,hemiI:0.42,dirC:0x9db4ff,dirI:0.8,dirPos:[-6,11,-9],pointI:1.4,ground:0x15223a,platform:0x334155,rimC:0x818cf8,stars:1,clouds:0.12,cloudC:0x3a4670,rain:0,sun:0,moon:1,exposure:1.05,rough:0.5,metal:0.1}),
+    rain:mk({bg:0x5a6879,fog:0x6b7788,fogD:0.03,hemiSky:0x9aa8ba,hemiGround:0x3a4452,hemiI:0.55,dirC:0xc5d0de,dirI:0.5,dirPos:[-4,12,-4],pointI:0.5,ground:0x3d5750,platform:0xb8c4d2,rimC:0x6366f1,stars:0,clouds:1,cloudC:0x59636f,rain:1,sun:0,moon:0,exposure:0.92,rough:0.22,metal:0.25})
+  };
+  var cur=mk({bg:0x8fd3ff,fog:0xbfe6ff,fogD:0.011,hemiSky:0xdbeeff,hemiGround:0x8a9a5b,hemiI:0.7,dirC:0xfff1d6,dirI:1.7,dirPos:[-8,12,-10],pointI:0,ground:0x7cc47a,platform:0xf8fafc,rimC:0x6366f1,stars:0,clouds:1,cloudC:0xffffff,rain:0,sun:1,moon:0,exposure:1.0,rough:0.65,metal:0.05});
+  var tgt=presets.day;
+  var numKeys=['fogD','hemiI','dirI','pointI','stars','clouds','rain','sun','moon','exposure','rough','metal'];
+  var flash=0,nextFlash=4;
+  var weather='day';
+
+  function setWeather(w){
+    weather=w;
+    tgt=presets[w];
+    document.body.setAttribute('data-theme',w);
+    var bs=document.querySelectorAll('#weatherBox button');
+    for(var i=0;i<bs.length;i++)bs[i].classList.toggle('active',bs[i].getAttribute('data-w')===w);
+    if(w==='rain')nextFlash=2+Math.random()*3;
+  }
+
+  function stepWeather(dt,t){
+    var f=1-Math.exp(-dt*2.2);
+    colorKeys.forEach(function(k){cur[k].lerp(tgt[k],f)});
+    numKeys.forEach(function(k){cur[k]+=(tgt[k]-cur[k])*f});
+    cur.dirPos.lerp(tgt.dirPos,f);
+
+    if(weather==='rain'){
+      nextFlash-=dt;
+      if(nextFlash<=0){flash=1;nextFlash=5+Math.random()*7}
+    }
+    flash=Math.max(0,flash-dt*2.6);
+    var fl=flash*flash;
+
+    scene.background.copy(cur.bg);
+    if(fl>0)scene.background.offsetHSL(0,0,fl*0.08);
+    scene.fog.color.copy(cur.fog);
+    scene.fog.density=cur.fogD;
+    renderer.toneMappingExposure=cur.exposure+fl*0.5;
+    hemi.color.copy(cur.hemiSky);
+    hemi.groundColor.copy(cur.hemiGround);
+    hemi.intensity=cur.hemiI+fl*1.4;
+    dir.color.copy(cur.dirC);
+    dir.intensity=cur.dirI;
+    dir.position.copy(cur.dirPos);
+    glow.intensity=cur.pointI*(0.9+0.1*Math.sin(t*2));
+    groundMat.color.copy(cur.ground);
+    groundMat.roughness=Math.min(0.95,cur.rough+0.3);
+    platMat.color.copy(cur.platform);
+    platMat.roughness=cur.rough;
+    platMat.metalness=cur.metal;
+    rimMat.color.copy(cur.rimC);
+    cloudMat.color.copy(cur.cloudC);
+    cloudMat.opacity=0.12+0.8*cur.clouds;
+    sunCore.material.opacity=cur.sun;
+    sunHalo.material.opacity=0.25*cur.sun;
+    sunGroup.visible=cur.sun>0.02;
+    moonCore.material.opacity=cur.moon;
+    moonHalo.material.opacity=0.2*cur.moon;
+    moonGroup.visible=cur.moon>0.02;
+    starsMat.opacity=cur.stars;
+    stars.visible=cur.stars>0.02;
+    rainMat.opacity=0.6*cur.rain;
+    rain.visible=cur.rain>0.02;
+
+    clouds.forEach(function(c){
+      c.position.x+=c.userData.speed*dt*(weather==='rain'?2.2:1);
+      if(c.position.x>70)c.position.x=-70;
+    });
+
+    if(rain.visible){
+      var wind=weather==='rain'?0.18:0;
+      for(var i=0;i<RAIN;i++){
+        var o=i*6;
+        var dy=rainVel[i]*dt;
+        rainPos[o+1]-=dy;
+        rainPos[o+4]-=dy;
+        rainPos[o]-=wind*dy*0.5;
+        rainPos[o+3]-=wind*dy*0.5;
+        if(rainPos[o+1]<-0.2){
+          var x=(Math.random()-0.5)*44,z=(Math.random()-0.5)*44,y=22+Math.random()*4;
+          rainPos[o]=x;rainPos[o+1]=y;rainPos[o+2]=z;
+          rainPos[o+3]=x+0.12;rainPos[o+4]=y+0.75;rainPos[o+5]=z;
+        }
+      }
+      rainGeo.attributes.position.needsUpdate=true;
+    }
+  }
+
+  function norm(d){return ((d%360)+360)%360}
+  function rad(d){return d*Math.PI/180}
+  function deg(r){return r*180/Math.PI}
+  function pos(theta,R,y){return new THREE.Vector3(R*Math.cos(rad(theta)),y,-R*Math.sin(rad(theta)))}
+
+  function fanGeo(cx,cz,y,r,phi0,sweep){
+    var n=Math.max(2,Math.ceil(Math.abs(sweep)/(Math.PI/72)));
+    var p=new Float32Array((n+2)*3);
+    p[0]=cx;p[1]=y;p[2]=cz;
+    var idx=[];
+    for(var i=0;i<=n;i++){
+      var ph=phi0+sweep*i/n;
+      p[3+i*3]=cx+r*Math.cos(ph);
+      p[4+i*3]=y;
+      p[5+i*3]=cz-r*Math.sin(ph);
+      if(i<n)idx.push(0,i+1,i+2);
+    }
+    var g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(p,3));
+    g.setIndex(idx);
+    return g;
+  }
+  function stripGeo(r1,r2,y,phi0,sweep){
+    var n=Math.max(2,Math.ceil(Math.abs(sweep)/(Math.PI/90)));
+    var p=new Float32Array((n+1)*6);
+    var idx=[];
+    for(var i=0;i<=n;i++){
+      var ph=phi0+sweep*i/n,c=Math.cos(ph),s=Math.sin(ph);
+      p[i*6]=r1*c;p[i*6+1]=y;p[i*6+2]=-r1*s;
+      p[i*6+3]=r2*c;p[i*6+4]=y;p[i*6+5]=-r2*s;
+      if(i<n){var k=i*2;idx.push(k,k+1,k+2,k+1,k+3,k+2)}
+    }
+    var g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(p,3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    return g;
+  }
+  function swap(mesh,geo){
+    mesh.geometry.dispose();
+    mesh.geometry=geo;
+  }
+
+  var lastR=-1;
+  function compute(){
+    var R=state.pct/25;
+    var a=norm(state.a),b=norm(state.b),p=norm(state.p);
+    var ccw=norm(b-a);
+    var pIn=norm(p-a)<ccw;
+    var start,span;
+    if(pIn){start=b;span=360-ccw}else{start=a;span=ccw}
+    if(ccw===0){start=a;span=0}
+    var A=pos(a,R,H),B=pos(b,R,H),P=pos(p,R,H);
+    var pax=A.x-P.x,paz=A.z-P.z,pbx=B.x-P.x,pbz=B.z-P.z;
+    var la=Math.hypot(pax,paz),lb=Math.hypot(pbx,pbz);
+    var vecAngle=null;
+    if(la>1e-3&&lb>1e-3){
+      var cs=(pax*pbx+paz*pbz)/(la*lb);
+      cs=Math.max(-1,Math.min(1,cs));
+      vecAngle=deg(Math.acos(cs));
+    }
+    var inscribed=vecAngle!==null?vecAngle:span/2;
+    return {R:R,a:a,b:b,p:p,A:A,B:B,P:P,start:start,span:span,inscribed:inscribed,vecAngle:vecAngle,pOnMinor:inscribed>90,pax:pax,paz:paz,pbx:pbx,pbz:pbz,la:la,lb:lb};
+  }
+
+  function fmt(v){return (Math.round(v*10)/10).toFixed(1)}
+
+  function updateAll(){
+    var g=compute();
+    G=g;
+    var R=g.R;
+
+    if(Math.abs(R-lastR)>1e-6){
+      lastR=R;
+      platform.scale.set(R,1,R);
+      gridGroup.scale.set(R,1,R);
+      rim.geometry.dispose();
+      rim.geometry=new THREE.TorusGeometry(R,0.045,14,200);
+      buildTicks(R);
+      dir.shadow.camera.left=-(R+4);
+      dir.shadow.camera.right=R+4;
+      dir.shadow.camera.top=R+4;
+      dir.shadow.camera.bottom=-(R+4);
+      dir.shadow.camera.updateProjectionMatrix();
+      glow.position.set(0,R*1.4,0);
+    }
+
+    ptA.position.copy(g.A);
+    ptB.position.copy(g.B);
+    ptP.position.copy(g.P);
+    ptO.position.set(0,H,0);
+
+    var O=new THREE.Vector3(0,H,0);
+    setTube(tOA,O,g.A);
+    setTube(tOB,O,g.B);
+    setTube(tPA,g.P,g.A);
+    setTube(tPB,g.P,g.B);
+    setTube(tOP,O,g.P);
+
+    var phi0=rad(g.start);
+    var sw=rad(g.span);
+    if(g.span>0.05){
+      swap(sector,fanGeo(0,0,0.03,R,phi0,sw));
+      swap(arcStrip,stripGeo(R-0.07,R+0.2,0.05,phi0,sw));
+      sector.visible=true;
+      arcStrip.visible=true;
+    }else{
+      sector.visible=false;
+      arcStrip.visible=false;
+    }
+
+    var mr=Math.min(R*0.3,1.3);
+    if(g.span>0.05){
+      swap(markC,fanGeo(0,0,0.06,mr,phi0,sw));
+      markC.visible=true;
+    }else markC.visible=false;
+
+    if(g.la>1e-3&&g.lb>1e-3){
+      var fa=Math.atan2(-g.paz,g.pax),fb=Math.atan2(-g.pbz,g.pbx);
+      var d=fb-fa;
+      while(d>Math.PI)d-=Math.PI*2;
+      while(d<-Math.PI)d+=Math.PI*2;
+      var pr=Math.min(R*0.28,1.1);
+      swap(markP,fanGeo(g.P.x,g.P.z,0.07,pr,fa,d));
+      markP.visible=true;
+    }else markP.visible=false;
+
+    function outward(th,dist,y){
+      return pos(th,R+dist,y);
+    }
+    lbA.position.copy(outward(g.a,0.75,0.55));
+    lbB.position.copy(outward(g.b,0.75,0.55));
+    lbP.position.copy(outward(g.p,0.75,0.55));
+    lbO.position.set(0.0,0.75,0.0);
+    drawLetter(lbA,'A','#2563eb');
+    drawLetter(lbB,'B','#4f46e5');
+    drawLetter(lbP,'P','#9333ea');
+    drawLetter(lbO,'O','#334155');
+
+    var midC=g.start+g.span/2;
+    var cp=pos(midC,Math.min(R*0.55,R-0.5),0.9);
+    lbC.position.copy(cp);
+    drawPill(lbC,'∠AOB = '+fmt(g.span)+'°','#818cf8');
+    lbC.visible=g.span>0.05;
+
+    var dx=(g.A.x+g.B.x)/2-g.P.x,dz=(g.A.z+g.B.z)/2-g.P.z;
+    var dl=Math.hypot(dx,dz)||1;
+    lbI.position.set(g.P.x+dx/dl*1.5,1.15,g.P.z+dz/dl*1.5);
+    drawPill(lbI,'∠APB = '+fmt(g.inscribed)+'°','#c084fc');
+    lbI.visible=g.la>1e-3&&g.lb>1e-3;
+
+    updateDOM(g);
+  }
+
+  function updateDOM(g){
+    var c=fmt(g.span),i=fmt(g.inscribed);
+    $('liveC').textContent=c+'°';
+    $('liveI').textContent=i+'°';
+    $('mC').textContent=c+'°';
+    $('mI').textContent=i+'°';
+    $('barC').style.width=(g.span/360*100)+'%';
+    $('barI').style.width=(g.inscribed/360*100)+'%';
+    var ok=Math.abs(g.span-2*g.inscribed)<0.1;
+    $('relMain').textContent='∠AOB = 2 × ∠APB → '+c+'° = 2 × '+i+'°'+(ok?'  ✓':'');
+    $('relSub').textContent=g.vecAngle!==null?'ตรวจสอบ ∠APB จากเวกเตอร์ PA และ PB ได้ '+fmt(g.vecAngle)+'°':'จุด P ทับจุด A หรือ B จึงยังไม่เกิดมุม';
+    $('rVal').textContent=(state.pct/10).toFixed(1)+' หน่วย';
+    var nb=$('noteBox');
+    var msg='';
+    if(g.span<0.05)msg='จุด A และ B ทับกัน จึงไม่มีส่วนโค้งรองรับมุม ลองลากให้แยกจากกัน';
+    else if(Math.abs(g.span-180)<0.6)msg='AB เป็นเส้นผ่านศูนย์กลาง ดังนั้น ∠APB = 90° (มุมในครึ่งวงกลม)';
+    else if(g.span>180)msg='P อยู่บนส่วนโค้งเล็ก ส่วนโค้ง AB ที่ไม่ผ่าน P จึงเป็นส่วนโค้งใหญ่ มุมที่จุดศูนย์กลางเป็นมุมกลับ ('+c+'°) และ ∠APB = '+i+'° มากกว่า 90°';
+    if(msg){nb.style.display='block';nb.textContent=msg}else nb.style.display='none';
+    renderCard(false);
+  }
+
+  var ids=[['aS','aN','a'],['bS','bN','b'],['pS','pN','p']];
+  function syncUI(){
+    ids.forEach(function(t){
+      var v=Math.round(state[t[2]]);
+      $(t[0]).value=v;
+      if(document.activeElement!==$(t[1]))$(t[1]).value=v;
+    });
+    $('rS').value=state.pct;
+  }
+  ids.forEach(function(t){
+    $(t[0]).addEventListener('input',function(e){
+      state[t[2]]=parseFloat(e.target.value);
+      if(t[2]==='p')demo=false,updateDemoBtn();
+      syncUI();updateAll();
+    });
+    $(t[1]).addEventListener('input',function(e){
+      var v=parseFloat(e.target.value);
+      if(isNaN(v))v=0;
+      v=Math.max(0,Math.min(360,v));
+      state[t[2]]=v;
+      if(t[2]==='p')demo=false,updateDemoBtn();
+      $(t[0]).value=v;
+      updateAll();
+    });
+  });
+  $('rS').addEventListener('input',function(e){
+    state.pct=parseInt(e.target.value,10);
+    syncUI();updateAll();
+  });
+
+  $('btnDefault').addEventListener('click',function(){
+    state.pct=100;state.a=200;state.b=340;state.p=80;demo=false;updateDemoBtn();
+    syncUI();updateAll();
+  });
+  $('btnRandom').addEventListener('click',function(){
+    state.a=Math.random()*360;
+    state.b=Math.random()*360;
+    state.p=Math.random()*360;
+    demo=false;updateDemoBtn();
+    syncUI();updateAll();
+  });
+  $('btnDiameter').addEventListener('click',function(){
+    state.b=norm(state.a+180);
+    state.p=norm(state.a+90);
+    demo=false;updateDemoBtn();
+    syncUI();updateAll();
+  });
+
+  var raycaster=new THREE.Raycaster();
+  var mouse=new THREE.Vector2();
+  var plane=new THREE.Plane(new THREE.Vector3(0,1,0),-H);
+  var dom=renderer.domElement;
+
+  function setMouse(e){
+    var r=dom.getBoundingClientRect();
+    mouse.x=((e.clientX-r.left)/r.width)*2-1;
+    mouse.y=-((e.clientY-r.top)/r.height)*2+1;
+    raycaster.setFromCamera(mouse,camera);
+  }
+  function hitTest(){
+    var objs=[ptA.userData.hit,ptB.userData.hit,ptP.userData.hit];
+    var hits=raycaster.intersectObjects(objs,false);
+    if(!hits.length)return null;
+    var o=hits[0].object;
+    if(o===ptA.userData.hit)return 'A';
+    if(o===ptB.userData.hit)return 'B';
+    return 'P';
+  }
+
+  stage.addEventListener('pointerdown',function(e){
+    if(e.target!==dom||e.button!==0)return;
+    setMouse(e);
+    var k=hitTest();
+    if(k){
+      dragKey=k;
+      controls.enabled=false;
+      dom.style.cursor='grabbing';
+      if(k==='P'&&demo){demo=false;updateDemoBtn()}
+      try{dom.setPointerCapture(e.pointerId)}catch(err){}
+      e.stopPropagation();
+    }
+  },true);
+
+  window.addEventListener('pointermove',function(e){
+    setMouse(e);
+    if(dragKey){
+      var hit=new THREE.Vector3();
+      if(raycaster.ray.intersectPlane(plane,hit)){
+        var an=norm(deg(Math.atan2(-hit.z,hit.x)));
+        state[dragKey.toLowerCase()]=an;
+        syncUI();updateAll();
+      }
+    }else if(e.target===dom){
+      dom.style.cursor=hitTest()?'grab':'default';
+    }
+  });
+  function endDrag(){
+    if(dragKey){
+      dragKey=null;
+      controls.enabled=true;
+      dom.style.cursor='default';
+    }
+  }
+  window.addEventListener('pointerup',endDrag);
+  window.addEventListener('pointercancel',endDrag);
+
+  var tween=null;
+  function flyTo(target,camPos){
+    tween={t:0,fromT:controls.target.clone(),toT:target.clone(),fromP:camera.position.clone(),toP:camPos.clone()};
+  }
+  function defaultCam(){
+    var f=0.5+0.5*(G?G.R/4:1);
+    return new THREE.Vector3(9*f,8*f,11*f);
+  }
+  $('btnReset').addEventListener('click',function(){
+    flyTo(new THREE.Vector3(0,0.4,0),defaultCam());
+  });
+  $('btnTop').addEventListener('click',function(){
+    var R=G?G.R:4;
+    flyTo(new THREE.Vector3(0,0,0),new THREE.Vector3(0.01,R*3.1+3,0.01));
+  });
+  $('btnSpin').addEventListener('click',function(){
+    controls.autoRotate=!controls.autoRotate;
+    this.classList.toggle('active',controls.autoRotate);
+  });
+  function updateDemoBtn(){
+    var b=$('btnDemo');
+    b.classList.toggle('active',demo);
+    b.textContent=demo?'⏸️ หยุดสาธิต':'▶️ สาธิตจุด P';
+  }
+  $('btnDemo').addEventListener('click',function(){
+    demo=!demo;
+    demoT=0;
+    updateDemoBtn();
+    if(demo)showCard('P');
+  });
+  $('btnHs').addEventListener('click',function(){
+    this.classList.toggle('active');
+    $('hsLayer').style.display=this.classList.contains('active')?'block':'none';
+  });
+  var wb=document.querySelectorAll('#weatherBox button');
+  for(var wi=0;wi<wb.length;wi++){
+    wb[wi].addEventListener('click',function(){setWeather(this.getAttribute('data-w'))});
+  }
+
+  var hsDefs=[
+    {id:'O',n:'1',name:'จุดศูนย์กลาง O'},
+    {id:'P',n:'2',name:'จุด P บนเส้นรอบวง'},
+    {id:'arc',n:'3',name:'ส่วนโค้ง AB'},
+    {id:'A',n:'4',name:'จุด A'},
+    {id:'B',n:'5',name:'จุด B'},
+    {id:'r',n:'6',name:'รัศมี'}
+  ];
+  var hsEls={};
+  hsDefs.forEach(function(d){
+    var b=document.createElement('button');
+    b.className='hs';
+    b.textContent=d.n;
+    b.title=d.name;
+    b.addEventListener('click',function(){showCard(d.id,true)});
+    $('hsLayer').appendChild(b);
+    hsEls[d.id]=b;
+  });
+  var chipBox=$('chipList');
+  hsDefs.forEach(function(d){
+    var c=document.createElement('button');
+    c.className='chip';
+    c.setAttribute('data-id',d.id);
+    c.innerHTML='<span>'+d.n+'</span>'+d.name;
+    c.addEventListener('click',function(){showCard(d.id,true)});
+    chipBox.appendChild(c);
+  });
+
+  function hsWorld(id){
+    if(!G)return new THREE.Vector3();
+    var R=G.R;
+    if(id==='O')return new THREE.Vector3(0,H+0.55,0);
+    if(id==='P')return G.P.clone().add(new THREE.Vector3(0,0.65,0));
+    if(id==='A')return G.A.clone().add(new THREE.Vector3(0,0.65,0));
+    if(id==='B')return G.B.clone().add(new THREE.Vector3(0,0.65,0));
+    if(id==='arc'){
+      var v=pos(G.start+G.span/2,R,0.5);
+      return v;
+    }
+    return new THREE.Vector3(G.A.x*0.5,H+0.5,G.A.z*0.5);
+  }
+
+  function cardData(id){
+    var g=G,c=fmt(g.span),i=fmt(g.inscribed),r=(state.pct/10).toFixed(1);
+    var opp=fmt(180-g.inscribed);
+    if(id==='O')return {t:'จุดศูนย์กลาง O',col:'#6366f1',b:'จุดยอดของ <b>มุมที่จุดศูนย์กลาง ∠AOB</b> มุมนี้รองรับส่วนโค้ง AB (ด้านที่ไม่ผ่าน P) ทำให้ขนาดมุมเท่ากับขนาดของส่วนโค้งนั้นพอดี',f:'∠AOB = '+c+'°'};
+    if(id==='P')return {t:'จุด P · มุมในส่วนของวงกลม',col:'#a855f7',b:'จุด P อยู่บนเส้นรอบวง เกิด <b>∠APB</b> รองรับส่วนโค้งเดียวกับ ∠AOB ลองลาก P ไปมาบนส่วนโค้งเดิม ค่ามุมจะไม่เปลี่ยน แต่ถ้าข้ามไปอีกฝั่งของ AB มุมจะกลายเป็น <b>'+opp+'°</b> (180° − '+i+'°)',f:'∠APB = '+i+'° = ½ × '+c+'°'};
+    if(id==='arc')return {t:'ส่วนโค้ง AB (ไม่ผ่าน P)',col:'#f59e0b',b:'แถบสีส้มคือส่วนโค้งที่รองรับมุมทั้งสอง ส่วนโค้งนี้มีขนาด <b>'+c+'°</b> เท่ากับมุมที่จุดศูนย์กลาง และเป็นสองเท่าของมุมในส่วนของวงกลม',f:'ส่วนโค้ง = '+c+'° = 2 × '+i+'°'};
+    if(id==='A')return {t:'จุด A · ปลายส่วนโค้ง',col:'#2563eb',b:'จุดปลายด้านหนึ่งของส่วนโค้ง เป็นปลายของแขนมุมทั้ง ∠AOB (เส้นทึบสีน้ำเงิน) และ ∠APB (เส้นสีม่วง) ลองลากจุด A เพื่อดูว่าสัดส่วน 2 เท่ายังคงอยู่',f:'ตำแหน่ง A = '+fmt(g.a)+'°'};
+    if(id==='B')return {t:'จุด B · ปลายส่วนโค้ง',col:'#4f46e5',b:'จุดปลายอีกด้านของส่วนโค้ง เมื่อ A และ B ห่างกันมากขึ้น ทั้ง ∠AOB และ ∠APB จะใหญ่ขึ้นพร้อมกัน โดย ∠AOB เป็น 2 เท่าเสมอ',f:'ตำแหน่ง B = '+fmt(g.b)+'°'};
+    return {t:'รัศมีของวงกลม',col:'#64748b',b:'OA = OB = OP = <b>'+r+' หน่วย</b> เพราะเป็นรัศมีเดียวกัน จึงทำให้ △OAP และ △OBP เป็นสามเหลี่ยมหน้าจั่ว ซึ่งเป็นกุญแจของการพิสูจน์ ลองเปลี่ยนรัศมีดูว่าความสัมพันธ์ของมุมไม่เปลี่ยน',f:'OA = OB = OP = '+r};
+  }
+
+  function renderCard(animate){
+    if(!currentCard||!G)return;
+    var d=cardData(currentCard);
+    $('cardTitle').textContent=d.t;
+    $('cardBody').innerHTML=d.b;
+    $('cardFormula').textContent=d.f;
+    $('cardBar').style.background=d.col;
+    var el=$('card');
+    if(animate){
+      el.classList.remove('show');
+      void el.offsetWidth;
+    }
+    el.classList.add('show');
+  }
+  function showCard(id,fly){
+    currentCard=id;
+    renderCard(true);
+    var k;
+    for(k in hsEls)hsEls[k].classList.toggle('on',k===id);
+    var cs=chipBox.children;
+    for(var j=0;j<cs.length;j++)cs[j].classList.toggle('on',cs[j].getAttribute('data-id')===id);
+    if(fly){
+      var w=hsWorld(id);
+      var tg=new THREE.Vector3(w.x,0.3,w.z);
+      if(id==='O')tg.set(0,0.3,0);
+      var off=camera.position.clone().sub(controls.target);
+      var dist=Math.min(Math.max(off.length(),9),12);
+      off.normalize().multiplyScalar(dist);
+      flyTo(tg,tg.clone().add(off));
+    }
+  }
+  $('cardClose').addEventListener('click',function(){
+    currentCard=null;
+    $('card').classList.remove('show');
+    var k;
+    for(k in hsEls)hsEls[k].classList.remove('on');
+    var cs=chipBox.children;
+    for(var j=0;j<cs.length;j++)cs[j].classList.remove('on');
+  });
+
+  var tv=new THREE.Vector3();
+  function updateHotspots(){
+    var w=stage.clientWidth,h=stage.clientHeight;
+    hsDefs.forEach(function(d){
+      var el=hsEls[d.id];
+      tv.copy(hsWorld(d.id)).project(camera);
+      if(tv.z>1||tv.z<-1){el.style.opacity=0;el.style.pointerEvents='none';return}
+      el.style.opacity=1;
+      el.style.pointerEvents='auto';
+      var x=(tv.x*0.5+0.5)*w,y=(-tv.y*0.5+0.5)*h;
+      el.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)';
+    });
+  }
+
+  var tabBtns=document.querySelectorAll('.tabs button');
+  for(var ti=0;ti<tabBtns.length;ti++){
+    tabBtns[ti].addEventListener('click',function(){
+      var t=this.getAttribute('data-tab');
+      for(var k=0;k<tabBtns.length;k++)tabBtns[k].classList.toggle('active',tabBtns[k]===this);
+      var ps=document.querySelectorAll('.pane');
+      for(var m=0;m<ps.length;m++)ps[m].classList.toggle('active',ps[m].id==='pane-'+t);
+    });
+  }
+
+  var quiz=[
+    {q:'ข้อ 1: ถ้าย้ายจุด P ไปตำแหน่งอื่นบนส่วนโค้งเดิม (ฝั่งเดียวกับ P เดิม) ขนาดของ ∠APB จะเป็นอย่างไร?',o:['เปลี่ยนไปตามตำแหน่งของ P','เท่าเดิมเสมอ','เพิ่มขึ้นเป็น 2 เท่า'],c:1,e:'มุมในส่วนของวงกลมที่รองรับด้วยส่วนโค้งเดียวกันมีขนาดเท่ากันเสมอ'},
+    {q:'ข้อ 2: ถ้า ∠AOB กางเท่ากับ 110° แล้ว ∠APB ที่รองรับด้วยส่วนโค้งเดียวกันกางกี่องศา?',o:['55°','110°','220°'],c:0,e:'∠APB = ½ × ∠AOB = ½ × 110° = 55°'},
+    {q:'ข้อ 3: ถ้าเปลี่ยนรัศมีวงกลมจาก 6 เป็น 12 หน่วย (A, B, P ยังรองรับส่วนโค้งเดียวกัน) ความสัมพันธ์ของ ∠AOB และ ∠APB จะเป็นอย่างไร?',o:['เปลี่ยนไป เพราะวงกลมใหญ่ขึ้น','ไม่เปลี่ยน ยังเป็น 2 เท่า'],c:1,e:'ขนาดมุมขึ้นกับขนาดของส่วนโค้งเป็นองศา ไม่ขึ้นกับความยาวรัศมี'},
+    {q:'ข้อ 4: ถ้า ∠APB = 35° แล้ว ∠AOB (รองรับส่วนโค้งเดียวกัน) มีขนาดเท่าใด?',o:['17.5°','35°','70°','140°'],c:2,e:'∠AOB = 2 × ∠APB = 2 × 35° = 70°'},
+    {q:'ข้อ 5: ถ้า AB เป็นเส้นผ่านศูนย์กลางของวงกลม และ P อยู่บนเส้นรอบวง ∠APB มีขนาดเท่าใด?',o:['45°','60°','90°','180°'],c:2,e:'∠AOB = 180° (เส้นตรง) จึงได้ ∠APB = ½ × 180° = 90°'}
+  ];
+  var ans=[];
+  function renderQuiz(){
+    ans=quiz.map(function(){return null});
+    var box=$('quizBox');
+    box.innerHTML='';
+    quiz.forEach(function(it,qi){
+      var d=document.createElement('div');
+      d.className='block q';
+      var p=document.createElement('p');
+      p.className='qt';
+      p.textContent=it.q;
+      d.appendChild(p);
+      var ob=document.createElement('div');
+      ob.className='opts';
+      it.o.forEach(function(txt,oi){
+        var b=document.createElement('button');
+        b.className='opt';
+        b.textContent=String.fromCharCode(0x0e01+oi)+'. '+txt;
+        b.addEventListener('click',function(){answer(qi,oi,ob,fb)});
+        ob.appendChild(b);
+      });
+      d.appendChild(ob);
+      var fb=document.createElement('div');
+      fb.className='fb';
+      d.appendChild(fb);
+      box.appendChild(d);
+    });
+    $('scoreBadge').textContent='คะแนน 0 / '+quiz.length;
+    $('quizResult').classList.remove('show');
+  }
+  function answer(qi,oi,ob,fb){
+    if(ans[qi]!==null)return;
+    ans[qi]=oi;
+    var it=quiz[qi],ok=oi===it.c;
+    var bs=ob.children;
+    for(var k=0;k<bs.length;k++){
+      bs[k].disabled=true;
+      if(k===it.c)bs[k].classList.add('right');
+      else if(k===oi)bs[k].classList.add('wrong');
+    }
+    fb.className='fb show '+(ok?'ok':'no');
+    fb.innerHTML=(ok?'<b>ถูกต้อง!</b> ':'<b>ยังไม่ถูกต้อง</b> ')+it.e;
+    var sc=0,done=0;
+    ans.forEach(function(a,i){if(a!==null){done++;if(a===quiz[i].c)sc++}});
+    $('scoreBadge').textContent='คะแนน '+sc+' / '+quiz.length;
+    if(done===quiz.length){
+      var r=$('quizResult');
+      var msg=sc===quiz.length?'🎉 เยี่ยมมาก! เข้าใจทฤษฎีบทครบถ้วน':(sc>=3?'👍 ดีมาก ทบทวนอีกนิดจะสมบูรณ์':'📚 ลองกลับไปทดลองลากจุดบนฉาก 3D แล้วทำใหม่อีกครั้ง');
+      r.innerHTML=msg+'<br><span style="font-size:22px">'+sc+' / '+quiz.length+'</span>';
+      r.classList.add('show');
+    }
+  }
+  $('btnQuizReset').addEventListener('click',renderQuiz);
+
+  function resize(){
+    var w=stage.clientWidth,h=stage.clientHeight;
+    if(!w||!h)return;
+    renderer.setSize(w,h,false);
+    camera.aspect=w/h;
+    camera.updateProjectionMatrix();
+  }
+  if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);
+  window.addEventListener('resize',resize);
+
+  var clock=new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    var dt=Math.min(clock.getDelta(),0.05);
+    var t=clock.elapsedTime;
+
+    if(demo&&G&&G.span>0.5){
+      demoT+=dt;
+      var s=norm(G.start+G.span);
+      var free=360-G.span;
+      var k=0.06+0.88*(0.5+0.5*Math.sin(demoT*0.9));
+      state.p=norm(s+free*k);
+      syncUI();
+      updateAll();
+    }
+
+    if(tween){
+      tween.t=Math.min(1,tween.t+dt/0.9);
+      var e=1-Math.pow(1-tween.t,3);
+      controls.target.lerpVectors(tween.fromT,tween.toT,e);
+      camera.position.lerpVectors(tween.fromP,tween.toP,e);
+      if(tween.t>=1)tween=null;
+    }
+
+    stepWeather(dt,t);
+
+    var pulse=1+0.12*Math.sin(t*3);
+    [ptA,ptB,ptP].forEach(function(p,i){
+      p.userData.ring.scale.set(pulse,pulse,pulse);
+      p.userData.mesh.position.y=Math.sin(t*2+i)*0.03;
+    });
+    if(dragKey)pointMap[dragKey].userData.ring.scale.set(1.5,1.5,1.5);
+
+    controls.update();
+    renderer.render(scene,camera);
+    updateHotspots();
+  }
+
+  setWeather('day');
+  syncUI();
+  renderQuiz();
+  resize();
+  updateAll();
+  flyTo(new THREE.Vector3(0,0.4,0),defaultCam());
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshLabelsAfterFont);
+  setTimeout(function(){showCard('P',false)},900);
+  animate();
+})();
+</script>
+</body>
+</html>
